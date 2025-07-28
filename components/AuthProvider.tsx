@@ -32,17 +32,27 @@ export default function AuthProvider({
   session: Session | null 
 }) {
   const [user, setUser] = useState<User | null>(session?.user ?? null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!session)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
   useEffect(() => {
+    console.log('AuthProvider: Setting up auth state listener')
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', { event, user: !!session?.user })
       setUser(session?.user ?? null)
       setLoading(false)
       router.refresh()
+    })
+
+    // Also check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', { user: !!session?.user })
+      setUser(session?.user ?? null)
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
