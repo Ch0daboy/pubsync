@@ -8,13 +8,14 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
+/* Remove problematic dark mode override */
+/* @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
   }
-}
+} */
 
 body {
   color: rgb(var(--foreground-rgb));
@@ -80,4 +81,33 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Fix input and form element text visibility */
+input, textarea, select {
+  color: #1f2937 !important; /* Dark gray text */
+  background-color: white !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #9ca3af !important; /* Light gray placeholder */
+}
+
+/* Ensure dropdown options are visible */
+option {
+  color: #1f2937 !important;
+  background-color: white !important;
+}
+
+/* Fix any clay-element inputs specifically */
+.clay-element input,
+.clay-element textarea,
+.clay-element select {
+  color: #1f2937 !important;
+  background-color: white !important;
+}
+
+.clay-element input::placeholder,
+.clay-element textarea::placeholder {
+  color: #9ca3af !important;
 } 

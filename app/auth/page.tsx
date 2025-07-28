@@ -77,7 +77,7 @@ export default function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="clay-element bg-white pl-10 pr-4 py-3 w-full rounded-lg border-0 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                className="clay-element bg-white text-gray-900 pl-10 pr-4 py-3 w-full rounded-lg border-0 focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder-gray-500"
                 placeholder="Enter your email"
                 required
               />
@@ -95,7 +95,7 @@ export default function AuthPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="clay-element bg-white pl-10 pr-12 py-3 w-full rounded-lg border-0 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                className="clay-element bg-white text-gray-900 pl-10 pr-12 py-3 w-full rounded-lg border-0 focus:ring-2 focus:ring-purple-500 focus:outline-none placeholder-gray-500"
                 placeholder="Enter your password"
                 required
               />
