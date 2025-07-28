@@ -1,7 +1,6 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { supabaseAdmin } from '@/lib/supabase'
 import AuthProvider from '@/components/AuthProvider'
 import PerformanceMonitor from '@/components/PerformanceMonitor'
 
@@ -17,8 +16,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createServerComponentClient({ cookies })
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { session } } = await supabaseAdmin.auth.getSession()
 
   return (
     <html lang="en">
