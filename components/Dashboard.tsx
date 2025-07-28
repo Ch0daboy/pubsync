@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Plus, Sparkles, TrendingUp, Search } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -48,13 +48,13 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <motion.h1 
+          <m.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl font-bold gradient-text mb-2"
           >
             ContentSync Dashboard
-          </motion.h1>
+          </m.h1>
           <p className="text-gray-600 font-medium">
             Monitor your platforms and sync content across all channels seamlessly
           </p>
@@ -78,7 +78,7 @@ export default function Dashboard() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="clay-element bg-gradient-to-br from-purple-50 to-blue-50 p-6"
@@ -90,9 +90,9 @@ export default function Dashboard() {
             <h3 className="font-semibold text-gray-900">Total Platforms</h3>
           </div>
           <p className="text-3xl font-bold text-purple-900">{stats.totalPlatforms}</p>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -105,9 +105,9 @@ export default function Dashboard() {
             <h3 className="font-semibold text-gray-900">Connected</h3>
           </div>
           <p className="text-3xl font-bold text-green-900">{stats.connectedPlatforms}</p>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -120,9 +120,9 @@ export default function Dashboard() {
             <h3 className="font-semibold text-gray-900">Total Content</h3>
           </div>
           <p className="text-3xl font-bold text-orange-900">{stats.totalContent}</p>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -135,7 +135,7 @@ export default function Dashboard() {
             <h3 className="font-semibold text-gray-900">Content Gaps</h3>
           </div>
           <p className="text-3xl font-bold text-blue-900">{stats.totalGaps}</p>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Main Content Grid */}
@@ -169,7 +169,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <motion.div 
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="clay-element bg-gradient-to-br from-gray-50 to-white p-12 text-center"
@@ -188,7 +188,7 @@ export default function Dashboard() {
                   Connect Your First Platform
                 </button>
               </Link>
-            </motion.div>
+            </m.div>
           )}
         </div>
 
@@ -221,7 +221,7 @@ function PlatformCard({ platform }: { platform: Platform }) {
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="clay-element cursor-pointer bg-white/60 hover:bg-white/80 p-6 transition-all duration-300"
@@ -261,7 +261,7 @@ function PlatformCard({ platform }: { platform: Platform }) {
           </p>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

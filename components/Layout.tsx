@@ -3,11 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Search, 
-  Wand2, 
-  CheckSquare, 
+import LazyMotionWrapper from "./LazyMotion";
+import {
+  LayoutDashboard,
+  Search,
+  Wand2,
+  CheckSquare,
   Settings,
   RefreshCw,
   Zap,
@@ -55,7 +56,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isActive = (url: string) => pathname === url;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-green-50">
+    <LazyMotionWrapper>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-green-50">
       {/* Header */}
       <header className="clay-element glass-effect sticky top-4 mx-4 mb-6 z-50">
         <div className="px-8 py-6">
@@ -136,5 +138,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    </LazyMotionWrapper>
   );
 } 
