@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { Settings, Plus, Trash2, Edit, CheckCircle, AlertCircle } from 'lucide-react'
 import Layout from '@/components/Layout'
 import { useAuth } from '@/components/AuthProvider'
+import AddPlatformModal from '@/components/AddPlatformModal'
+import { PlatformInfo } from '@/lib/platform-analyzer'
 
 const platformTypes = [
   { id: 'youtube', name: 'YouTube', color: 'from-red-400 to-red-600' },
@@ -104,13 +106,7 @@ const PlatformCard = ({ platform, onEdit, onDelete }: { platform: Platform, onEd
 export default function SettingsPage() {
   const [platforms, setPlatforms] = useState<Platform[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [editingPlatform, setEditingPlatform] = useState<Platform | null>(null)
-  const [formData, setFormData] = useState({
-    name: '',
-    url: '',
-    platform_type: '' as PlatformType | ''
-  })
+  const [showAddModal, setShowAddModal] = useState(false)
   const { user } = useAuth()
 
   useEffect(() => {
@@ -150,71 +146,43 @@ export default function SettingsPage() {
     fetchPlatforms()
   }, [user])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.platform_type) {
-      alert('Please select a platform type')
-      return
-    }
-
+  const handleAddPlatform = async (platformInfo: PlatformInfo) => {
     try {
-      if (editingPlatform) {
-        // Update existing platform
-        const response = await fetch(`/api/platforms/${editingPlatform.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            url: formData.url,
-            platform_type: formData.platform_type,
-          }),
-        })
+      const response = await fetch('/api/platforms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: platformInfo.name,
+          url: platformInfo.url,
+          platform_type: platformInfo.platform_type,
+        }),
+      })
 
-        if (response.ok) {
-          const updatedPlatform = await response.json()
-          setPlatforms(platforms.map(p =>
-            p.id === editingPlatform.id ? updatedPlatform : p
-          ))
-        }
+      if (response.ok) {
+        const newPlatform = await response.json()
+        setPlatforms([...platforms, {
+          id: newPlatform.id,
+          name: newPlatform.name,
+          url: newPlatform.url,
+          platform_type: newPlatform.platform_type,
+          status: newPlatform.status || 'pending',
+          content_count: newPlatform.content_count || 0,
+          gap_count: newPlatform.gap_count || 0
+        }])
       } else {
-        // Add new platform
-        const response = await fetch('/api/platforms', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            url: formData.url,
-            platform_type: formData.platform_type,
-          }),
-        })
-
-        if (response.ok) {
-          const newPlatform = await response.json()
-          setPlatforms([...platforms, newPlatform])
-        }
+        throw new Error('Failed to add platform')
       }
-      
-      setFormData({ name: '', url: '', platform_type: '' })
-      setShowAddForm(false)
-      setEditingPlatform(null)
     } catch (error) {
-      console.error('Error saving platform:', error)
+      console.error('Error adding platform:', error)
+      throw error
     }
   }
 
   const handleEdit = (platform: Platform) => {
-    setEditingPlatform(platform)
-    setFormData({
-      name: platform.name,
-      url: platform.url || '',
-      platform_type: platform.platform_type
-    })
-    setShowAddForm(true)
+    // TODO: Implement edit functionality
+    console.log('Edit platform:', platform)
   }
 
   const handleDelete = async (id: string) => {
@@ -250,86 +218,13 @@ export default function SettingsPage() {
           </div>
           
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={() => setShowAddModal(true)}
             className="clay-button bg-gradient-to-r from-purple-400 to-blue-500 hover:from-purple-500 hover:to-blue-600 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             Add Platform
           </button>
         </div>
-
-        {showAddForm && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="clay-element bg-white/60 p-6"
-          >
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              {editingPlatform ? 'Edit Platform' : 'Add New Platform'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Type</label>
-                <select
-                  value={formData.platform_type}
-                  onChange={(e) => setFormData({ ...formData, platform_type: e.target.value as PlatformType })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-                  required
-                >
-                  <option value="">Select platform type</option>
-                  {platformTypes.map((platform) => (
-                    <option key={platform.id} value={platform.id}>
-                      {platform.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Platform Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., My YouTube Channel"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">URL (Optional)</label>
-                <input
-                  type="url"
-                  value={formData.url}
-                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-                />
-              </div>
-              
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="clay-button bg-green-100 hover:bg-green-200 text-green-800 px-4 py-2 rounded-lg font-medium"
-                >
-                  {editingPlatform ? 'Update' : 'Add'} Platform
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddForm(false)
-                    setEditingPlatform(null)
-                    setFormData({ name: '', url: '', platform_type: '' })
-                  }}
-                  className="clay-button bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        )}
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -365,6 +260,14 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      <AddPlatformModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false)
+        }}
+        onSave={handleAddPlatform}
+      />
     </Layout>
   )
 }
