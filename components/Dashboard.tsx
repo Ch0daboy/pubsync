@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { m } from "framer-motion";
 import { Plus, Sparkles, TrendingUp, Search } from "lucide-react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "./AuthProvider";
 import type { Platform } from "@/types/database";
 
@@ -17,13 +16,11 @@ export default function Dashboard() {
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
-        .from('platforms')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      // Use the API route instead of direct Supabase client
+      const response = await fetch('/api/platforms');
+      if (!response.ok) throw new Error('Failed to fetch platforms');
+      
+      const data = await response.json();
       setPlatforms(data || []);
     } catch (error) {
       console.error('Error loading platforms:', error);

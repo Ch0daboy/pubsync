@@ -1,9 +1,9 @@
 'use client'
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { Session, User } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabase'
 
 interface AuthContextType {
   user: User | null
@@ -16,7 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
@@ -34,7 +34,6 @@ export default function AuthProvider({
   const [user, setUser] = useState<User | null>(session?.user ?? null)
   const [loading, setLoading] = useState(!session)
   const router = useRouter()
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
     console.log('AuthProvider: Setting up auth state listener')
@@ -56,7 +55,7 @@ export default function AuthProvider({
     })
 
     return () => subscription.unsubscribe()
-  }, [router, supabase])
+  }, [router])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
