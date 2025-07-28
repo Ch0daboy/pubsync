@@ -1,0 +1,135 @@
+import React, { useState, useEffect } from "react";
+import { Platform } from "@/entities/Platform";
+import { ContentGap } from "@/entities/ContentGap";
+import { motion } from "framer-motion";
+import { Plus, Sparkles, TrendingUp } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+
+import StatsOverview from "../components/dashboard/StatsOverview";
+import PlatformCard from "../components/dashboard/PlatformCard";
+import RecentActivity from "../components/dashboard/RecentActivity";
+
+export default function Dashboard() {
+  const [platforms, setPlatforms] = useState([]);
+  const [contentGaps, setContentGaps] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [platformData, gapData] = await Promise.all([
+        Platform.list('-updated_date'),
+        ContentGap.list('-created_date', 10)
+      ]);
+      setPlatforms(platformData);
+      setContentGaps(gapData);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div>
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl font-bold gradient-text mb-2"
+          >
+            ContentSync Dashboard
+          </motion.h1>
+          <p className="text-gray-600 font-medium">
+            Monitor your platforms and sync content across all channels seamlessly
+          </p>
+        </div>
+        
+        <div className="flex gap-3">
+          <Link to={createPageUrl("ContentGaps")}>
+            <button className="clay-button bg-gradient-to-r from-orange-100 to-red-100 hover:from-orange-200 hover:to-red-200 px-6 py-3 font-semibold text-orange-800 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              View Gaps
+            </button>
+          </Link>
+          <Link to={createPageUrl("Settings")}>
+            <button className="clay-button bg-gradient-to-r from-purple-400 to-blue-500 hover:from-purple-500 hover:to-blue-600 px-6 py-3 font-semibold text-white flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add Platform
+            </button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Overview */}
+      <StatsOverview />
+
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Platform Gallery */}
+        <div className="lg:col-span-2">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="clay-element bg-gradient-to-br from-blue-400 to-indigo-500 p-2">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Connected Platforms</h2>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Array(4).fill(0).map((_, i) => (
+                <div key={i} className="clay-element bg-white/40 p-6 animate-pulse">
+                  <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              ))}
+            </div>
+          ) : platforms.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {platforms.map((platform) => (
+                <PlatformCard
+                  key={platform.id}
+                  platform={platform}
+                  onClick={() => {/* Handle platform click */}}
+                />
+              ))}
+            </div>
+          ) : (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="clay-element bg-gradient-to-br from-gray-50 to-white p-12 text-center"
+            >
+              <div className="clay-element bg-gradient-to-br from-gray-200 to-gray-300 p-4 w-16 h-16 rounded-full mx-auto mb-4">
+                <Plus className="w-8 h-8 text-gray-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Platforms Connected
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Connect your social media accounts and websites to start syncing content
+              </p>
+              <Link to={createPageUrl("Settings")}>
+                <button className="clay-button bg-gradient-to-r from-purple-400 to-blue-500 hover:from-purple-500 hover:to-blue-600 px-6 py-3 font-semibold text-white">
+                  Connect Your First Platform
+                </button>
+              </Link>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Recent Activity Sidebar */}
+        <div className="lg:col-span-1">
+          <RecentActivity />
+        </div>
+      </div>
+    </div>
+  );
+}

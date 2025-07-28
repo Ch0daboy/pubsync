@@ -1,0 +1,75 @@
+{
+  "name": "RepurposedContent",
+  "type": "object",
+  "properties": {
+    "original_content_title": {
+      "type": "string",
+      "description": "Title of the original content"
+    },
+    "original_platform": {
+      "type": "string",
+      "description": "Source platform"
+    },
+    "target_platform": {
+      "type": "string",
+      "description": "Destination platform"
+    },
+    "original_content": {
+      "type": "string",
+      "description": "Original content text/description"
+    },
+    "repurposed_content": {
+      "type": "string",
+      "description": "AI-generated repurposed content"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "video",
+        "post",
+        "story",
+        "article",
+        "thread",
+        "carousel"
+      ],
+      "description": "Type of content created"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "published"
+      ],
+      "default": "pending",
+      "description": "Approval status"
+    },
+    "confidence_score": {
+      "type": "number",
+      "description": "AI confidence in the repurposed content quality"
+    },
+    "hashtags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Generated hashtags for the content"
+    },
+    "notes": {
+      "type": "string",
+      "description": "User notes or modifications"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Scheduled publication date"
+    }
+  },
+  "required": [
+    "original_content_title",
+    "original_platform",
+    "target_platform",
+    "repurposed_content"
+  ]
+}

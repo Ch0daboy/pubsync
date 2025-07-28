@@ -1,0 +1,273 @@
+import React, { useState, useEffect } from "react";
+import { Platform } from "@/entities/Platform";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Plus, 
+  Trash2, 
+  RefreshCw, 
+  CheckCircle, 
+  AlertCircle,
+  Youtube,
+  Instagram,
+  Twitter,
+  Linkedin,
+  Globe,
+  Settings as SettingsIcon
+} from "lucide-react";
+
+const platformOptions = [
+  { value: 'youtube', label: 'YouTube', icon: Youtube, color: 'from-red-400 to-red-600' },
+  { value: 'instagram', label: 'Instagram', icon: Instagram, color: 'from-pink-400 to-purple-600' },
+  { value: 'twitter', label: 'Twitter', icon: Twitter, color: 'from-blue-400 to-blue-600' },
+  { value: 'linkedin', label: 'LinkedIn', icon: Linkedin, color: 'from-blue-600 to-indigo-600' },
+  { value: 'tiktok', label: 'TikTok', icon: Globe, color: 'from-gray-800 to-black' },
+  { value: 'blog', label: 'Blog/Website', icon: Globe, color: 'from-gray-400 to-gray-600' }
+];
+
+export default function Settings() {
+  const [platforms, setPlatforms] = useState([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    platform_type: '',
+    url: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    loadPlatforms();
+  }, []);
+
+  const loadPlatforms = async () => {
+    const data = await Platform.list('-updated_date');
+    setPlatforms(data);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const platformConfig = platformOptions.find(p => p.value === formData.platform_type);
+      await Platform.create({
+        ...formData,
+        status: 'pending',
+        content_count: Math.floor(Math.random() * 50),
+        gap_count: Math.floor(Math.random() * 10),
+        primary_color: platformConfig?.color || 'from-gray-400 to-gray-600'
+      });
+      
+      setFormData({ name: '', platform_type: '', url: '' });
+      setShowAddForm(false);
+      loadPlatforms();
+    } catch (error) {
+      console.error('Error adding platform:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deletePlatform = async (id) => {
+    await Platform.delete(id);
+    loadPlatforms();
+  };
+
+  const testConnection = async (platform) => {
+    // Simulate connection test
+    await Platform.update(platform.id, { 
+      status: 'syncing'
+    });
+    loadPlatforms();
+    
+    setTimeout(async () => {
+      await Platform.update(platform.id, { 
+        status: Math.random() > 0.3 ? 'connected' : 'error',
+        last_sync: new Date().toISOString()
+      });
+      loadPlatforms();
+    }, 2000);
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="clay-element bg-gradient-to-br from-indigo-400 to-purple-500 p-3">
+            <SettingsIcon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold gradient-text">Platform Settings</h1>
+            <p className="text-gray-600 font-medium">Manage your connected platforms and sync preferences</p>
+          </div>
+        </div>
+        
+        <Button
+          onClick={() => setShowAddForm(true)}
+          className="clay-button bg-gradient-to-r from-purple-400 to-blue-500 hover:from-purple-500 hover:to-blue-600 text-white px-6 py-3"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Platform
+        </Button>
+      </div>
+
+      {/* Add Platform Form */}
+      {showAddForm && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="clay-element bg-gradient-to-br from-blue-50 to-purple-50 p-6"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Platform</h3>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="platform_type">Platform Type</Label>
+              <Select value={formData.platform_type} onValueChange={(value) => setFormData({...formData, platform_type: value})}>
+                <SelectTrigger className="clay-element bg-white">
+                  <SelectValue placeholder="Select platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  {platformOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        <option.icon className="w-4 h-4" />
+                        {option.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="name">Platform Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                placeholder="e.g., My YouTube Channel"
+                className="clay-element bg-white"
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="url">URL or Handle</Label>
+              <Input
+                id="url"
+                value={formData.url}
+                onChange={(e) => setFormData({...formData, url: e.target.value})}
+                placeholder="https://youtube.com/@channel or @username"
+                className="clay-element bg-white"
+                required
+              />
+            </div>
+            
+            <div className="md:col-span-3 flex gap-3">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="clay-button bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-white"
+              >
+                {isLoading ? 'Adding...' : 'Add Platform'}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                variant="outline"
+                className="clay-button bg-white hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </motion.div>
+      )}
+
+      {/* Connected Platforms */}
+      <div className="clay-element bg-white/40 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Connected Platforms</h2>
+        
+        {platforms.length > 0 ? (
+          <div className="space-y-4">
+            {platforms.map((platform) => {
+              const config = platformOptions.find(p => p.value === platform.platform_type);
+              const Icon = config?.icon || Globe;
+              
+              return (
+                <motion.div
+                  key={platform.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="clay-element bg-white p-4 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`clay-element bg-gradient-to-br ${config?.color || 'from-gray-400 to-gray-600'} p-3`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{platform.name}</h3>
+                      <p className="text-sm text-gray-600">{platform.url}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    {/* Status */}
+                    <div className="flex items-center gap-2">
+                      {platform.status === 'connected' && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                      {platform.status === 'error' && <AlertCircle className="w-4 h-4 text-red-600" />}
+                      {platform.status === 'syncing' && <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />}
+                      <span className={`text-sm font-medium ${
+                        platform.status === 'connected' ? 'text-emerald-700' :
+                        platform.status === 'error' ? 'text-red-700' :
+                        'text-blue-700'
+                      }`}>
+                        {platform.status === 'connected' ? 'Connected' :
+                         platform.status === 'error' ? 'Error' :
+                         platform.status === 'syncing' ? 'Syncing...' :
+                         'Pending'}
+                      </span>
+                    </div>
+                    
+                    {/* Actions */}
+                    <Button
+                      onClick={() => testConnection(platform)}
+                      size="sm"
+                      variant="outline"
+                      className="clay-button bg-white hover:bg-gray-50"
+                      disabled={platform.status === 'syncing'}
+                    >
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Test
+                    </Button>
+                    
+                    <Button
+                      onClick={() => deletePlatform(platform.id)}
+                      size="sm"
+                      variant="outline"
+                      className="clay-button bg-red-50 hover:bg-red-100 text-red-600"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="clay-element bg-gradient-to-br from-gray-200 to-gray-300 p-4 w-16 h-16 rounded-full mx-auto mb-4">
+              <Plus className="w-8 h-8 text-gray-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No platforms connected</h3>
+            <p className="text-gray-600">Add your first platform to get started with content synchronization</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

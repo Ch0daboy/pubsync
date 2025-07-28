@@ -1,0 +1,79 @@
+{
+  "name": "ContentGap",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Gap opportunity title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the content gap"
+    },
+    "source_platform": {
+      "type": "string",
+      "description": "Platform where original content exists"
+    },
+    "target_platform": {
+      "type": "string",
+      "description": "Platform missing this content"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "video",
+        "post",
+        "story",
+        "article",
+        "thread"
+      ],
+      "description": "Type of content to create"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium",
+      "description": "Priority level based on engagement potential"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "detected",
+        "in_progress",
+        "completed",
+        "dismissed"
+      ],
+      "default": "detected",
+      "description": "Current status of the gap"
+    },
+    "engagement_score": {
+      "type": "number",
+      "description": "Predicted engagement score for this content"
+    },
+    "source_content_url": {
+      "type": "string",
+      "description": "URL of the original content"
+    },
+    "generated_content": {
+      "type": "string",
+      "description": "AI-generated content for the target platform"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Content tags and categories"
+    }
+  },
+  "required": [
+    "title",
+    "source_platform",
+    "target_platform",
+    "content_type"
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "Platform",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Platform name (YouTube, Instagram, Twitter, etc.)"
+    },
+    "url": {
+      "type": "string",
+      "description": "Platform URL or handle"
+    },
+    "platform_type": {
+      "type": "string",
+      "enum": [
+        "youtube",
+        "instagram",
+        "twitter",
+        "linkedin",
+        "tiktok",
+        "blog"
+      ],
+      "description": "Type of platform"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "connected",
+        "error",
+        "syncing",
+        "pending"
+      ],
+      "default": "pending",
+      "description": "Connection status"
+    },
+    "last_sync": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last synchronization timestamp"
+    },
+    "content_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of content items fetched"
+    },
+    "gap_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of content gaps identified"
+    },
+    "primary_color": {
+      "type": "string",
+      "description": "Platform brand color"
+    },
+    "avatar_url": {
+      "type": "string",
+      "description": "Platform profile image URL"
+    }
+  },
+  "required": [
+    "name",
+    "platform_type"
+  ]
+}

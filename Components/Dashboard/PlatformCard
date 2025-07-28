@@ -1,0 +1,134 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Youtube, 
+  Instagram, 
+  Twitter, 
+  Linkedin, 
+  Globe,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+  Clock,
+  TrendingUp,
+  Eye
+} from 'lucide-react';
+
+const platformIcons = {
+  youtube: Youtube,
+  instagram: Instagram,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  blog: Globe,
+  tiktok: Globe
+};
+
+const statusConfig = {
+  connected: {
+    color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    icon: CheckCircle,
+    bgGradient: 'from-emerald-50 to-green-50'
+  },
+  error: {
+    color: 'bg-red-100 text-red-700 border-red-200',
+    icon: AlertCircle,
+    bgGradient: 'from-red-50 to-pink-50'
+  },
+  syncing: {
+    color: 'bg-blue-100 text-blue-700 border-blue-200',
+    icon: RefreshCw,
+    bgGradient: 'from-blue-50 to-indigo-50'
+  },
+  pending: {
+    color: 'bg-amber-100 text-amber-700 border-amber-200',
+    icon: Clock,
+    bgGradient: 'from-amber-50 to-yellow-50'
+  }
+};
+
+export default function PlatformCard({ platform, onClick }) {
+  const Icon = platformIcons[platform.platform_type] || Globe;
+  const StatusIcon = statusConfig[platform.status]?.icon || Clock;
+  const statusStyle = statusConfig[platform.status] || statusConfig.pending;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      onClick={onClick}
+      className="clay-element cursor-pointer bg-white/60 hover:bg-white/80 p-6 transition-all duration-300"
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={`clay-element bg-gradient-to-br ${statusStyle.bgGradient} p-3`}>
+            <Icon className="w-6 h-6 text-gray-700" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 truncate max-w-32">
+              {platform.name}
+            </h3>
+            <p className="text-sm text-gray-600 capitalize">
+              {platform.platform_type}
+            </p>
+          </div>
+        </div>
+        
+        <div className="clay-element p-2">
+          <StatusIcon className={`w-4 h-4 ${
+            platform.status === 'syncing' ? 'animate-spin' : ''
+          } ${
+            platform.status === 'connected' ? 'text-emerald-600' :
+            platform.status === 'error' ? 'text-red-600' :
+            platform.status === 'syncing' ? 'text-blue-600' :
+            'text-amber-600'
+          }`} />
+        </div>
+      </div>
+
+      {/* Status Badge */}
+      <div className="mb-4">
+        <Badge className={`${statusStyle.color} clay-element px-3 py-1`}>
+          {platform.status === 'connected' ? 'Connected' :
+           platform.status === 'error' ? 'Connection Error' :
+           platform.status === 'syncing' ? 'Syncing...' :
+           'Pending Setup'}
+        </Badge>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="clay-element bg-gradient-to-br from-purple-50 to-blue-50 p-3 text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <Eye className="w-3 h-3 text-purple-600" />
+            <span className="text-xs font-medium text-purple-700">Content</span>
+          </div>
+          <p className="text-lg font-bold text-purple-900">
+            {platform.content_count || 0}
+          </p>
+        </div>
+        
+        <div className="clay-element bg-gradient-to-br from-orange-50 to-red-50 p-3 text-center">
+          <div className="flex items-center justify-center gap-1 mb-1">
+            <TrendingUp className="w-3 h-3 text-orange-600" />
+            <span className="text-xs font-medium text-orange-700">Gaps</span>
+          </div>
+          <p className="text-lg font-bold text-orange-900">
+            {platform.gap_count || 0}
+          </p>
+        </div>
+      </div>
+
+      {/* Last Sync */}
+      {platform.last_sync && (
+        <div className="mt-4 pt-3 border-t border-gray-200/50">
+          <p className="text-xs text-gray-500">
+            Last sync: {new Date(platform.last_sync).toLocaleDateString()}
+          </p>
+        </div>
+      )}
+    </motion.div>
+  );
+}
