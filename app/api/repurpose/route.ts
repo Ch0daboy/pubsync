@@ -2,6 +2,28 @@ import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 import { repurposeContent } from '@/lib/gemini'
 
+export async function GET() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: content, error } = await supabase
+      .from('repurposed_content')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return NextResponse.json(content)
+  } catch (error) {
+    console.error('Error fetching repurposed content:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { data: { user } } = await supabase.auth.getUser()

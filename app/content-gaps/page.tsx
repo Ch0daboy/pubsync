@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, SlidersHorizontal, ArrowRight, Wand2 } from 'lucide-react'
 import Layout from '@/components/Layout'
+import { useAuth } from '@/components/AuthProvider'
 
 const platformIcons = {
   youtube: 'YouTube',
@@ -24,6 +25,7 @@ interface ContentGap {
   source_platform: Platform
   target_platform: Platform
   priority: Priority
+  original_content?: string
 }
 
 const priorityConfig: Record<Priority, string> = {
@@ -32,7 +34,22 @@ const priorityConfig: Record<Priority, string> = {
   low: 'bg-blue-100 text-blue-700 border-blue-200'
 }
 
-const ContentGapCard = ({ gap, index }: { gap: ContentGap, index: number }) => {
+const ContentGapCard = ({ gap, index, onGenerate }: { 
+  gap: ContentGap, 
+  index: number,
+  onGenerate: (gap: ContentGap) => void 
+}) => {
+  const [isGenerating, setIsGenerating] = useState(false)
+
+  const handleGenerate = async () => {
+    setIsGenerating(true)
+    try {
+      await onGenerate(gap)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,11 +70,24 @@ const ContentGapCard = ({ gap, index }: { gap: ContentGap, index: number }) => {
         </div>
         <h3 className="font-bold text-lg text-gray-900 mb-2">{gap.title}</h3>
         <p className="text-sm text-gray-600 mb-4">{gap.description}</p>
+        
+        {gap.original_content && (
+          <div className="mb-4">
+            <h4 className="font-medium text-gray-900 mb-2 text-sm">Original Content Preview</h4>
+            <div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 max-h-20 overflow-y-auto">
+              {gap.original_content.substring(0, 150)}...
+            </div>
+          </div>
+        )}
       </div>
       <div className="mt-auto">
-        <button className="w-full clay-button bg-gradient-to-r from-purple-400 to-blue-500 hover:from-purple-500 hover:to-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2">
+        <button 
+          onClick={handleGenerate}
+          disabled={isGenerating}
+          className="w-full clay-button bg-gradient-to-r from-purple-400 to-blue-500 hover:from-purple-500 hover:to-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+        >
           <Wand2 className="w-4 h-4" />
-          Generate Content
+          {isGenerating ? 'Generating...' : 'Generate Content'}
         </button>
       </div>
     </motion.div>
@@ -67,38 +97,70 @@ const ContentGapCard = ({ gap, index }: { gap: ContentGap, index: number }) => {
 export default function ContentGapsPage() {
   const [gaps, setGaps] = useState<ContentGap[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     const fetchGaps = async () => {
+      if (!user) return
+      
       try {
-        // Mock data for now - replace with actual API call
-        const mockGaps: ContentGap[] = [
-          {
-            id: 1,
-            title: "YouTube Video to Instagram Reels",
-            description: "Transform your popular YouTube content into engaging Instagram Reels",
-            source_platform: "youtube" as Platform,
-            target_platform: "instagram" as Platform,
-            priority: "high" as Priority
-          },
-          {
-            id: 2,
-            title: "Blog Post to Twitter Thread",
-            description: "Break down your blog posts into compelling Twitter threads",
-            source_platform: "blog" as Platform,
-            target_platform: "twitter" as Platform,
-            priority: "medium" as Priority
-          },
-          {
-            id: 3,
-            title: "LinkedIn Article to TikTok",
-            description: "Convert professional insights into TikTok content",
-            source_platform: "linkedin" as Platform,
-            target_platform: "tiktok" as Platform,
-            priority: "low" as Priority
+        // For now, we'll generate gaps based on existing platforms and content
+        // In a real app, this would be an AI analysis of content gaps
+        const platformsResponse = await fetch('/api/platforms')
+        const contentResponse = await fetch('/api/repurpose')
+        
+        if (platformsResponse.ok && contentResponse.ok) {
+          const platforms = await platformsResponse.json() as Array<{ platform_type: string }>
+          const content = await contentResponse.json() as Array<{ original_content?: string }>
+          
+          // Generate mock gaps based on platform combinations
+          const mockGaps: ContentGap[] = []
+          
+          if (platforms.length > 0) {
+            const platformTypes = platforms.map((p) => p.platform_type)
+            
+            // Create gaps for different platform combinations
+            if (platformTypes.includes('youtube') && platformTypes.includes('instagram')) {
+              mockGaps.push({
+                id: 1,
+                title: "YouTube Video to Instagram Reels",
+                description: "Transform your popular YouTube content into engaging Instagram Reels",
+                source_platform: "youtube" as Platform,
+                target_platform: "instagram" as Platform,
+                priority: "high" as Priority,
+                original_content: content[0]?.original_content || "Sample YouTube content..."
+              })
+            }
+            
+            if (platformTypes.includes('blog') && platformTypes.includes('twitter')) {
+              mockGaps.push({
+                id: 2,
+                title: "Blog Post to Twitter Thread",
+                description: "Break down your blog posts into compelling Twitter threads",
+                source_platform: "blog" as Platform,
+                target_platform: "twitter" as Platform,
+                priority: "medium" as Priority,
+                original_content: content[1]?.original_content || "Sample blog content..."
+              })
+            }
+            
+            if (platformTypes.includes('linkedin') && platformTypes.includes('tiktok')) {
+              mockGaps.push({
+                id: 3,
+                title: "LinkedIn Article to TikTok",
+                description: "Convert professional insights into TikTok content",
+                source_platform: "linkedin" as Platform,
+                target_platform: "tiktok" as Platform,
+                priority: "low" as Priority,
+                original_content: content[2]?.original_content || "Sample LinkedIn content..."
+              })
+            }
           }
-        ]
-        setGaps(mockGaps)
+          
+          setGaps(mockGaps)
+        } else {
+          console.error('Failed to fetch data for gaps')
+        }
       } catch (e) {
         console.error("Failed to fetch content gaps", e)
       } finally {
@@ -106,7 +168,37 @@ export default function ContentGapsPage() {
       }
     }
     fetchGaps()
-  }, [])
+  }, [user])
+
+  const handleGenerateContent = async (gap: ContentGap) => {
+    try {
+      const response = await fetch('/api/repurpose', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          originalContent: gap.original_content || 'Sample content for repurposing',
+          sourcePlatform: gap.source_platform,
+          targetPlatform: gap.target_platform,
+          contentType: 'post',
+          originalContentTitle: gap.title
+        }),
+      })
+
+      if (response.ok) {
+        // Remove the gap from the list since content was generated
+        setGaps(prev => prev.filter(g => g.id !== gap.id))
+        alert('Content generated successfully! Check the Review Queue.')
+      } else {
+        console.error('Failed to generate content')
+        alert('Failed to generate content. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error generating content:', error)
+      alert('Error generating content. Please try again.')
+    }
+  }
 
   return (
     <Layout>
@@ -141,8 +233,20 @@ export default function ContentGapsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {gaps.map((gap, index) => (
-              <ContentGapCard key={gap.id} gap={gap} index={index} />
+              <ContentGapCard 
+                key={gap.id} 
+                gap={gap} 
+                index={index}
+                onGenerate={handleGenerateContent}
+              />
             ))}
+            {gaps.length === 0 && (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                <Search className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No content gaps found</p>
+                <p className="text-sm">Add more platforms to discover content opportunities</p>
+              </div>
+            )}
           </div>
         )}
       </div>

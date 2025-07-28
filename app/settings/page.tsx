@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Settings, Plus, Trash2, Edit, CheckCircle, AlertCircle } from 'lucide-react'
 import Layout from '@/components/Layout'
+import { useAuth } from '@/components/AuthProvider'
 
 const platformTypes = [
   { id: 'youtube', name: 'YouTube', color: 'from-red-400 to-red-600' },
@@ -110,41 +111,36 @@ export default function SettingsPage() {
     url: '',
     platform_type: '' as PlatformType | ''
   })
+  const { user } = useAuth()
 
   useEffect(() => {
     const fetchPlatforms = async () => {
+      if (!user) return
+      
       try {
-        // Mock data for now - replace with actual API call
-        const mockPlatforms: Platform[] = [
-          {
-            id: '1',
-            name: 'My YouTube Channel',
-            url: 'https://youtube.com/@mychannel',
-            platform_type: 'youtube' as PlatformType,
-            status: 'connected' as PlatformStatus,
-            content_count: 45,
-            gap_count: 12
-          },
-          {
-            id: '2',
-            name: 'Instagram Business',
-            url: 'https://instagram.com/mybusiness',
-            platform_type: 'instagram' as PlatformType,
-            status: 'connected' as PlatformStatus,
-            content_count: 128,
-            gap_count: 8
-          },
-          {
-            id: '3',
-            name: 'Tech Blog',
-            url: 'https://myblog.com',
-            platform_type: 'blog' as PlatformType,
-            status: 'error' as PlatformStatus,
-            content_count: 23,
-            gap_count: 15
-          }
-        ]
-        setPlatforms(mockPlatforms)
+        const response = await fetch('/api/platforms')
+        if (response.ok) {
+          const data = await response.json() as Array<{
+            id: string
+            name: string
+            url?: string
+            platform_type: string
+            status?: string
+            content_count?: number
+            gap_count?: number
+          }>
+          setPlatforms(data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            url: item.url,
+            platform_type: item.platform_type as PlatformType,
+            status: (item.status as PlatformStatus) || 'pending',
+            content_count: item.content_count || 0,
+            gap_count: item.gap_count || 0
+          })))
+        } else {
+          console.error('Failed to fetch platforms')
+        }
       } catch (e) {
         console.error("Failed to fetch platforms", e)
       } finally {
@@ -152,9 +148,9 @@ export default function SettingsPage() {
       }
     }
     fetchPlatforms()
-  }, [])
+  }, [user])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!formData.platform_type) {
@@ -162,36 +158,53 @@ export default function SettingsPage() {
       return
     }
 
-    if (editingPlatform) {
-      // Update existing platform
-      setPlatforms(platforms.map(p =>
-        p.id === editingPlatform.id
-          ? {
-              ...p,
-              name: formData.name,
-              url: formData.url,
-              platform_type: formData.platform_type as PlatformType,
-              status: 'pending' as PlatformStatus
-            }
-          : p
-      ))
-    } else {
-      // Add new platform
-      const newPlatform: Platform = {
-        id: Date.now().toString(),
-        name: formData.name,
-        url: formData.url,
-        platform_type: formData.platform_type as PlatformType,
-        status: 'pending' as PlatformStatus,
-        content_count: 0,
-        gap_count: 0
+    try {
+      if (editingPlatform) {
+        // Update existing platform
+        const response = await fetch(`/api/platforms/${editingPlatform.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            url: formData.url,
+            platform_type: formData.platform_type,
+          }),
+        })
+
+        if (response.ok) {
+          const updatedPlatform = await response.json()
+          setPlatforms(platforms.map(p =>
+            p.id === editingPlatform.id ? updatedPlatform : p
+          ))
+        }
+      } else {
+        // Add new platform
+        const response = await fetch('/api/platforms', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            url: formData.url,
+            platform_type: formData.platform_type,
+          }),
+        })
+
+        if (response.ok) {
+          const newPlatform = await response.json()
+          setPlatforms([...platforms, newPlatform])
+        }
       }
-      setPlatforms([...platforms, newPlatform])
+      
+      setFormData({ name: '', url: '', platform_type: '' })
+      setShowAddForm(false)
+      setEditingPlatform(null)
+    } catch (error) {
+      console.error('Error saving platform:', error)
     }
-    
-    setFormData({ name: '', url: '', platform_type: '' })
-    setShowAddForm(false)
-    setEditingPlatform(null)
   }
 
   const handleEdit = (platform: Platform) => {
@@ -204,9 +217,21 @@ export default function SettingsPage() {
     setShowAddForm(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this platform?')) {
-      setPlatforms(platforms.filter(p => p.id !== id))
+      try {
+        const response = await fetch(`/api/platforms/${id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          setPlatforms(platforms.filter(p => p.id !== id))
+        } else {
+          console.error('Failed to delete platform')
+        }
+      } catch (error) {
+        console.error('Error deleting platform:', error)
+      }
     }
   }
 
@@ -248,7 +273,7 @@ export default function SettingsPage() {
                 <select
                   value={formData.platform_type}
                   onChange={(e) => setFormData({ ...formData, platform_type: e.target.value as PlatformType })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   required
                 >
                   <option value="">Select platform type</option>
@@ -267,7 +292,7 @@ export default function SettingsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., My YouTube Channel"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   required
                 />
               </div>
@@ -279,7 +304,7 @@ export default function SettingsPage() {
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                   placeholder="https://..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                 />
               </div>
               
