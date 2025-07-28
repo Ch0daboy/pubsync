@@ -31,22 +31,31 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, url, platform_type, primary_color } = body
+    const { name, url, platform_type } = body
+
+    // Validate required fields
+    if (!name || !platform_type) {
+      return NextResponse.json({ error: 'Name and platform type are required' }, { status: 400 })
+    }
 
     const { data: platform, error } = await supabase
       .from('platforms')
       .insert({
         user_id: user.id,
         name,
-        url,
+        url: url || null,
         platform_type,
-        primary_color,
-        status: 'pending'
+        status: 'pending',
+        content_count: 0,
+        gap_count: 0
       })
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error:', error)
+      throw error
+    }
 
     return NextResponse.json(platform)
   } catch (error) {
