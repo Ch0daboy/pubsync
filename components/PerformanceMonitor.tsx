@@ -34,7 +34,7 @@ export default function PerformanceMonitor() {
       // First Input Delay (FID)
       const fidObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const fidEntry = entry as any // Type assertion for FID entry
+          const fidEntry = entry as PerformanceEntry & { processingStart?: number }
           if (fidEntry.processingStart) {
             console.log('FID:', fidEntry.processingStart - fidEntry.startTime)
           }
@@ -46,7 +46,7 @@ export default function PerformanceMonitor() {
       let clsValue = 0
       const clsObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const clsEntry = entry as any // Type assertion for CLS entry
+          const clsEntry = entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number }
           if (!clsEntry.hadRecentInput && clsEntry.value) {
             clsValue += clsEntry.value
           }

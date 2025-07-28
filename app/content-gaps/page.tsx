@@ -118,7 +118,7 @@ export default function ContentGapsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold gradient-text">Content Opportunities</h1>
-              <p className="text-gray-600 font-medium">Discover gaps to reuse and expand your content's reach</p>
+              <p className="text-gray-600 font-medium">Discover gaps to reuse and expand your content&apos;s reach</p>
             </div>
           </div>
           <button className="clay-button bg-white hover:bg-gray-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2">

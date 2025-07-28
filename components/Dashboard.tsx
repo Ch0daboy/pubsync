@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { m } from "framer-motion";
 import { Plus, Sparkles, TrendingUp, Search } from "lucide-react";
 import Link from "next/link";
@@ -13,18 +13,14 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      loadPlatforms();
-    }
-  }, [user]);
+  const loadPlatforms = useCallback(async () => {
+    if (!user?.id) return;
 
-  const loadPlatforms = async () => {
     try {
       const { data, error } = await supabase
         .from('platforms')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -34,7 +30,13 @@ export default function Dashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      loadPlatforms();
+    }
+  }, [user, loadPlatforms]);
 
   const stats = {
     totalPlatforms: platforms.length,
